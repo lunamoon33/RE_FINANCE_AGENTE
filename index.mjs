@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const GROQ_API_KEY  = process.env.GROQ_API_KEY;
-const MODEL         = 'deepseek-r1-distill-llama-70b';
+const MODEL         = 'llama-3.3-70b-versatile';
 const MEMORY_FILE   = path.join(__dirname, 'memory.json');
 
 const groq = new Groq({ apiKey: GROQ_API_KEY });
