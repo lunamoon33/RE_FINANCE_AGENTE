@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install", "npm install -g openclaw@latest"]
+
+[start]
+cmd = "openclaw gateway --no-daemon"
