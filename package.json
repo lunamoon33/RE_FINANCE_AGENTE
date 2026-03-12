@@ -1,0 +1,17 @@
+{
+  "name": "re-finance-agent",
+  "version": "1.0.0",
+  "description": "Agente Financiero Autónomo para Emprendedoras",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "groq-sdk": "^0.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
