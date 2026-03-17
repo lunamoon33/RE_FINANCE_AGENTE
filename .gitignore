@@ -2,13 +2,7 @@
 
 node_modules
 
-openclaw/agents
-openclaw/canvas
-openclaw/cron
-openclaw/memory
-openclaw/workspace
 openclaw/*.log
-openclaw/openclaw.json
 openclaw/credentials
 
 *.sqlite
