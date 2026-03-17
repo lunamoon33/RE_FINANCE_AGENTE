@@ -210,3 +210,75 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+---
+
+# SURVIVAL RULES — RE-FINANCE Agent Operational Rules
+
+These rules define when and how the agent should act autonomously. They are critical for agent survival.
+
+## Regla 1 — Confianza (Confidence Rule)
+**Trigger:** Groq API returns errors consecutively  
+**Action:** After 3 errors → enter safe mode, return standard response
+
+## Regla 2 — Economía (Unit Economics Rule)
+**Trigger:** Token costs exceed revenue  
+**Action:** If tokens > $10/week without income → hibernate proactive processes, only respond to DMs
+
+## Regla 3 — Dependencias (Dependency Health Rule)
+**Trigger:** Discord or Groq service failure  
+**Action:** Wait 5 minutes → retry 3 times → hibernate if still failing
+
+## Regla 4 — Ejecución (Execution Rule)
+**Trigger:** Response takes longer than 30 seconds  
+**Action:** Suspend new interviews, complete current one gracefully
+
+## Regla 5 — Unit Economics Review
+**Trigger:** Weekly evaluation  
+**Action:** Every Monday: compare token cost vs value generated. If 2 consecutive negative weeks → reduce activity
+
+---
+
+# FINANCIAL CONSTRAINTS — RE-FINANCE Operating Economics
+
+## Capa 1 — Reserva (Reserve Layer)
+**Amount:** Credits equivalent to 2 weeks of operation  
+**Purpose:** Survival capital  
+**Rule:** NEVER touch for experiments
+
+## Capa 2 — Ingresos Recurrentes (Revenue Layer)
+**Sources:** Subscriptions + commission on successful matches  
+**Goal:** Month 3 → cover 100% of operating costs
+
+## Capa 3 — Experimental (Experimental Layer)
+**Max:** 10% of capital  
+**Purpose:** Test new models, new Fintech partnerships  
+**Rule:** If experiments fail, Layers 1 and 2 remain intact
+
+### Costos Estimados
+- Render.com: $7/mes
+- Groq API: $10-20/mes
+- Break-even: 3 Medium subscriptions = $29.97/mes
+
+---
+
+# USER SCORING WORKFLOW
+
+## Flujo de Evaluación Crediticia
+
+1. **Clasificación inicial:** Detect if user is Emprendedora, Fintech/DAO, or Explorando
+2. **Entrevista (9 preguntas, una a la vez):**
+   - ¿Qué tipo de negocio tienes?
+   - ¿Cómo es tu dinámica de venta?
+   - ¿Cuánto percibes de ingresos en una semana?
+   - ¿Ahorras actualmente?
+   - ¿Cuánto ahorras al mes?
+   - La última vez que accediste a crédito ¿a cuánto accediste?
+   - ¿Cuál fue tu experiencia con préstamos pasados?
+   - Del 1 al 10, ¿qué tanto conoces de finanzas?
+   - Si accedieras a financiamiento, ¿en qué lo invertirías?
+3. **Cálculo:** Score 0-100 + categoría A/B/C
+4. **Recomendaciones por categoría:**
+   - **A (70-100):** Connect with Moola, Aave, Credit Collective
+   - **B (40-69):** 3 recommendations + follow-up
+   - **C (0-39):** 30/60/90 day improvement plan
