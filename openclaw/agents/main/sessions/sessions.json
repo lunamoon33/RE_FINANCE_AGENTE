@@ -16,7 +16,7 @@
       "accountId": "default"
     },
     "sessionId": "e718f83f-c5f2-4596-ac3a-63ce358f6c5f",
-    "updatedAt": 1773717798970,
+    "updatedAt": 1773807791068,
     "deliveryContext": {
       "channel": "discord",
       "to": "channel:978105976710369370",
@@ -116,7 +116,7 @@
     "contextTokens": 400000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773717792658,
+      "generatedAt": 1773807779249,
       "sessionId": "e718f83f-c5f2-4596-ac3a-63ce358f6c5f",
       "sessionKey": "agent:main:discord:channel:978105976710369370",
       "provider": "openai",
@@ -136,25 +136,25 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 26179,
-        "projectContextChars": 13587,
-        "nonProjectContextChars": 12592
+        "chars": 30763,
+        "projectContextChars": 18209,
+        "nonProjectContextChars": 12554
       },
       "injectedWorkspaceFiles": [
         {
           "name": "AGENTS.md",
           "path": "/home/node/.openclaw/workspace/AGENTS.md",
           "missing": false,
-          "rawChars": 7809,
-          "injectedChars": 7809,
+          "rawChars": 9803,
+          "injectedChars": 9803,
           "truncated": false
         },
         {
           "name": "SOUL.md",
           "path": "/home/node/.openclaw/workspace/SOUL.md",
           "missing": false,
-          "rawChars": 1664,
-          "injectedChars": 1664,
+          "rawChars": 1311,
+          "injectedChars": 1311,
           "truncated": false
         },
         {
@@ -177,16 +177,16 @@
           "name": "USER.md",
           "path": "/home/node/.openclaw/workspace/USER.md",
           "missing": false,
-          "rawChars": 474,
-          "injectedChars": 474,
+          "rawChars": 2030,
+          "injectedChars": 2030,
           "truncated": false
         },
         {
           "name": "HEARTBEAT.md",
           "path": "/home/node/.openclaw/workspace/HEARTBEAT.md",
           "missing": false,
-          "rawChars": 167,
-          "injectedChars": 167,
+          "rawChars": 1592,
+          "injectedChars": 1592,
           "truncated": false
         },
         {
@@ -336,11 +336,11 @@
         ]
       }
     },
-    "inputTokens": 390,
-    "outputTokens": 119,
-    "cacheRead": 10624,
+    "inputTokens": 338,
+    "outputTokens": 531,
+    "cacheRead": 19584,
     "cacheWrite": 0,
-    "totalTokens": 11014,
+    "totalTokens": 19922,
     "totalTokensFresh": true
   },
   "agent:main:discord:channel:1483304630602694820": {
@@ -361,7 +361,7 @@
       "threadId": "1483304630602694820"
     },
     "sessionId": "b9cea211-b141-4d92-ac88-319b8da68a58",
-    "updatedAt": 1773719389449,
+    "updatedAt": 1773720861884,
     "deliveryContext": {
       "channel": "discord",
       "to": "channel:1483304630602694820",
@@ -470,14 +470,14 @@
       ],
       "version": 0
     },
-    "totalTokens": 13215,
+    "totalTokens": 15190,
     "totalTokensFresh": true,
     "modelProvider": "openai",
     "model": "gpt-5",
     "contextTokens": 400000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773719386508,
+      "generatedAt": 1773720858603,
       "sessionId": "b9cea211-b141-4d92-ac88-319b8da68a58",
       "sessionKey": "agent:main:discord:channel:1483304630602694820",
       "provider": "openai",
@@ -497,9 +497,9 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 26396,
+        "chars": 26358,
         "projectContextChars": 13587,
-        "nonProjectContextChars": 12809
+        "nonProjectContextChars": 12771
       },
       "injectedWorkspaceFiles": [
         {
@@ -701,9 +701,9 @@
         ]
       }
     },
-    "inputTokens": 415,
-    "outputTokens": 70,
-    "cacheRead": 12800,
+    "inputTokens": 726,
+    "outputTokens": 79,
+    "cacheRead": 14464,
     "cacheWrite": 0
   }
 }
