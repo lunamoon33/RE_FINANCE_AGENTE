@@ -7,3 +7,8 @@ openclaw/credentials
 
 *.sqlite
 *.jsonl
+
+# Autogenerados de Openclaw
+openclaw/agents/main/sessions/
+openclaw/update-check.json
+openclaw/workspace/MEMORY.md
