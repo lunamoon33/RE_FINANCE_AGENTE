@@ -260,25 +260,4 @@ These rules define when and how the agent should act autonomously. They are crit
 - Groq API: $10-20/mes
 - Break-even: 3 Medium subscriptions = $29.97/mes
 
----
 
-# USER SCORING WORKFLOW
-
-## Flujo de Evaluación Crediticia
-
-1. **Clasificación inicial:** Detect if user is Emprendedora, Fintech/DAO, or Explorando
-2. **Entrevista (9 preguntas, una a la vez):**
-   - ¿Qué tipo de negocio tienes?
-   - ¿Cómo es tu dinámica de venta?
-   - ¿Cuánto percibes de ingresos en una semana?
-   - ¿Ahorras actualmente?
-   - ¿Cuánto ahorras al mes?
-   - La última vez que accediste a crédito ¿a cuánto accediste?
-   - ¿Cuál fue tu experiencia con préstamos pasados?
-   - Del 1 al 10, ¿qué tanto conoces de finanzas?
-   - Si accedieras a financiamiento, ¿en qué lo invertirías?
-3. **Cálculo:** Score 0-100 + categoría A/B/C
-4. **Recomendaciones por categoría:**
-   - **A (70-100):** Connect with Moola, Aave, Credit Collective
-   - **B (40-69):** 3 recommendations + follow-up
-   - **C (0-39):** 30/60/90 day improvement plan
