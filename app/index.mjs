@@ -1,88 +1,200 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const { SuperDappAgent } = require('@superdapp/agents');
-import express from 'express';
+import { Client, GatewayIntentBits, REST, Routes, Events } from 'discord.js';
 import Groq from 'groq-sdk';
-import { Client, GatewayIntentBits, Events } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { supabase } from './db.mjs';
+
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const SUPERDAPP_API_TOKEN = process.env.SUPERDAPP_API_KEY;
-const WEBHOOK_PORT = process.env.SUPERDAPP_WEBHOOK_PORT || 3000;
-const MODEL = 'llama-3.3-70b-versatile';
-const MEMORY_FILE = path.join(__dirname, 'memory.json');
-const groq = new Groq({ apiKey: GROQ_API_KEY });
-const agent = new SuperDappAgent({ apiToken: SUPERDAPP_API_TOKEN, baseUrl: 'https://api.superdapp.ai' });
-// Unir agente al Super Group — ejecutar solo una vez
-function loadMemory() { try { if (fs.existsSync(MEMORY_FILE)) return JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8')); } catch {} return {}; }
-function saveMemory(data) { fs.writeFileSync(MEMORY_FILE, JSON.stringify(data, null, 2)); }
-let memory = loadMemory();
-const SOUL = fs.readFileSync(path.join(__dirname, '../workspace/SOUL.md'), 'utf8');
-const sessions = new Map();
-function getSession(userId) { if (!sessions.has(userId)) sessions.set(userId, []); return sessions.get(userId); }
-async function askGroq(userId, userMessage) {
-  const history = getSession(userId);
-  history.push({ role: 'user', content: userMessage });
-  try {
-    const response = await groq.chat.completions.create({ model: MODEL, messages: [{ role: 'system', content: SOUL }, ...history], max_tokens: 1024, temperature: 0.7 });
-    const reply = response.choices[0]?.message?.content || 'Lo siento, hubo un error.';
-    history.push({ role: 'assistant', content: reply });
-    if (history.length > 20) history.splice(0, 2);
-    return reply;
-  } catch (error) { console.error('Groq error:', error.message); return '⚠️ Dificultades técnicas. Intenta en unos minutos.'; }
+const BOT_CHANNEL_ID = process.env.DISCORD_BOT_CHANNEL_ID;
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+let groq;
+try {
+    groq = new Groq({ apiKey: GROQ_API_KEY });
+} catch (e) {
+    console.warn("⚠️ Groq client initialization failed, ensure GROQ_API_KEY is correct.");
 }
-agent.addCommand('/hola', async ({ roomId }) => {
-  console.log('🔑 roomId SDK:', roomId);
-  const reply = await askGroq('superdapp_' + roomId, 'Hola');
-  await agent.sendConnectionMessage(roomId, reply);
-});
-agent.addCommand('/message', async ({ roomId, message }) => {
-  const text = message?.body?.m?.body || message?.body?.m?.text || '';
-  if (!text) return;
-  console.log('📱 SuperDapp: "' + text + '"');
-  const reply = await askGroq('superdapp_' + roomId, text);
-  await agent.sendConnectionMessage(roomId, reply);
-  console.log('✅ Respuesta enviada');
-});
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages] });
-client.once(Events.ClientReady, (c) => { console.log('✅ RE-FINANCE Agent online as ' + c.user.tag); console.log('🤖 Model: ' + MODEL); });
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) return;
-  const isMentioned = message.mentions.has(client.user);
-  const isDM = message.channel.type === 1;
-  if (!isDM && !isMentioned) return;
-  let content = message.content.replace('<@' + client.user.id + '>', '').trim();
-  if (!content) content = 'Hola';
-  await message.channel.sendTyping();
-  const reply = await askGroq(message.author.id, content);
-  if (reply.length > 2000) { const chunks = reply.match(/.{1,1900}/gs) || [reply]; for (const chunk of chunks) await message.reply(chunk); }
-  else await message.reply(reply);
-});
-client.on('error', (error) => console.error('Discord error:', error.message));
-process.on('unhandledRejection', (error) => console.error('Unhandled:', error.message));
-const app = express();
-app.use(express.json());
-app.post('/webhook', async (req, res) => {
-  res.status(200).send('OK');
-  try {
-    let body = req.body;
-    if (body?.challenge) return;
-    if (body?.body && typeof body.body === 'string') {
-      try {
-        const parsed = JSON.parse(body.body);
-        if (parsed.m && typeof parsed.m === 'string') {
-          const inner = JSON.parse(decodeURIComponent(parsed.m));
-          body = { ...body, body: { m: inner } };
-        }
-      } catch(e) {}
+
+const SYSTEM_PROMPT = `Eres un asesor financiero experto de RE-FINANCE.
+Tu objetivo es realizar una breve entrevista de unas 3 a 4 preguntas para evaluar la salud crediticia/financiera del usuario.
+Haz una pregunta a la vez. Sé amable y conciso. 
+Cuando consideres que tienes suficiente información (aprox 3 interacciones), despídete brevemente y escribe SIEMPRE exactamente la palabra "ENTREVISTA_FINALIZADA" al final de tu último mensaje. Esto es crítico.`;
+
+const SCORING_PROMPT = `Basado en la siguiente conversación financiera, calcula un score financiero del 1 al 100 del usuario. Devuelve SOLO un número entero, nada de texto adicional.`;
+
+client.once(Events.ClientReady, async (c) => {
+    console.log(`✅ RE-FINANCE MVP Bot online as ${c.user.tag}`);
+    const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+    try {
+        await rest.put(Routes.applicationCommands(DISCORD_CLIENT_ID), {
+            body: [
+                {
+                    name: 'refinance',
+                    description: 'Inicia una entrevista financiera'
+                }
+            ]
+        });
+        console.log('✅ Comando /refinance registrado');
+    } catch (e) {
+        console.error('Error al registrar comando. Revisa DISCORD_CLIENT_ID y DISCORD_TOKEN.', e.message);
     }
-    await agent.processRequest(body);
-  } catch(e) { console.error('❌ error:', e.message); }
 });
-app.listen(WEBHOOK_PORT, () => { console.log('🌐 SuperDapp webhook escuchando en puerto ' + WEBHOOK_PORT); });
-client.login(DISCORD_TOKEN);
+
+client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+    if (interaction.commandName === 'refinance') {
+        // Validación de canal
+        if (BOT_CHANNEL_ID && interaction.channelId !== BOT_CHANNEL_ID && BOT_CHANNEL_ID !== 'insert_channel_here') {
+            return interaction.reply({ content: `Por favor usa este comando en el canal designado para el bot.`, ephemeral: true });
+        }
+        
+        await interaction.reply({ content: 'Iniciando sesión en la base de datos...', ephemeral: true });
+
+        try {
+            // Verificar si el usuario existe
+            let { data: dbUser } = await supabase.from('users').select('*').eq('discord_id', interaction.user.id).single();
+            if (!dbUser) {
+                const { data: newUser } = await supabase.from('users').insert({ discord_id: interaction.user.id }).select().single();
+                dbUser = newUser;
+            }
+
+            // Crear Thread
+            const threadName = `Entrevista - ${interaction.user.username}`;
+            const thread = await interaction.channel.threads.create({
+                name: threadName,
+                type: 11, // GUILD_PUBLIC_THREAD
+                reason: 'Sesión RE-FINANCE'
+            });
+
+            // Insertar sesión
+            const { data: session } = await supabase.from('sessions').insert({
+                thread_id: thread.id,
+                user_id: dbUser.id,
+                status: 'active'
+            }).select().single();
+
+            // Mensaje inicial
+            const msg = `¡Hola <@${interaction.user.id}>! Soy tu agente RE-FINANCE. Vamos a revisar tu perfil financiero para darte las mejores recomendaciones.\n\nPara empezar, ¿cuáles son tus principales fuentes de ingresos actuales?`;
+            await thread.send(msg);
+            
+            // Guardar primer mensaje
+            await supabase.from('messages').insert({ session_id: session.id, role: 'assistant', content: msg });
+        } catch (e) {
+            console.error('Database/Thread error:', e);
+            await interaction.followUp({ content: 'Error al iniciar sesión. Revisa las credenciales de Supabase.', ephemeral: true });
+        }
+    }
+});
+
+client.on(Events.MessageCreate, async message => {
+    if (message.author.bot) return;
+    if (!message.channel.isThread()) return;
+
+    try {
+        // Verificar existencia de sesión activa para este thread
+        const { data: session } = await supabase.from('sessions').select('*').eq('thread_id', message.channel.id).single();
+        if (!session) return; // No es un thread del bot
+        
+        if (session.status === 'completed') return;
+
+        if (session.status === 'awaiting_decision') {
+            const text = message.content.toLowerCase();
+            if (text.includes('si') || text.includes('sí') || text.includes('yes')) {
+                await supabase.from('sessions').update({ publish_decision: true, status: 'awaiting_wallet' }).eq('id', session.id);
+                await message.reply("¡Genial! Por favor envía la dirección de tu **wallet** para publicar los resultados.");
+            } else {
+                await supabase.from('sessions').update({ publish_decision: false, status: 'completed' }).eq('id', session.id);
+                await message.reply("Entendido. No publicaremos los datos. ¡Gracias por usar RE-FINANCE!");
+            }
+            return;
+        }
+
+        if (session.status === 'awaiting_wallet') {
+            const wallet = message.content.trim();
+            await supabase.from('users').update({ wallet }).eq('id', session.user_id);
+            
+            const testnetUrl = process.env.TESTNET_URL || 'https://testnet.re-finance.com';
+            await supabase.from('sessions').update({ testnet_url: testnetUrl, status: 'completed' }).eq('id', session.id);
+            
+            await message.reply(`✅ Tus resultados han sido mock-publicados para la wallet \`${wallet}\` en el endpoint: ${testnetUrl}\n¡Sesión finalizada exitosamente!`);
+            return;
+        }
+
+        // --- MODO ENTREVISTA (status: 'active') ---
+        await message.channel.sendTyping();
+
+        // 1. Guardar query de usuario
+        await supabase.from('messages').insert({ session_id: session.id, role: 'user', content: message.content });
+
+        // 2. Traer historial
+        const { data: messages } = await supabase.from('messages').select('role, content').eq('session_id', session.id).order('created_at', { ascending: true });
+        
+        const groqMessages = [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages.map(m => ({ role: m.role, content: m.content }))
+        ];
+
+        if (!groq) {
+            return message.reply("Error interno: Cliente Groq no configurado.");
+        }
+
+        const completion = await groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
+            messages: groqMessages,
+            max_tokens: 1024,
+            temperature: 0.5
+        });
+
+        let aiReply = completion.choices[0]?.message?.content || "Hubo un error evaluando, intenta de nuevo.";
+        let isFinished = false;
+
+        if (aiReply.includes('ENTREVISTA_FINALIZADA')) {
+            isFinished = true;
+            aiReply = aiReply.replace('ENTREVISTA_FINALIZADA', '').trim();
+        }
+
+        // 3. Guardar respuesta asistente
+        if (aiReply) {
+            await supabase.from('messages').insert({ session_id: session.id, role: 'assistant', content: aiReply });
+            
+            // Fragmentar si excede limite de discord
+            if (aiReply.length > 2000) {
+                const chunks = aiReply.match(/.{1,1900}/gs) || [aiReply];
+                for (const chunk of chunks) await message.reply(chunk);
+            } else {
+                await message.reply(aiReply);
+            }
+        }
+
+        // 4. Calcular score si terminó
+        if (isFinished) {
+            await message.channel.sendTyping();
+            
+            const scoreCompletion = await groq.chat.completions.create({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                    { role: 'system', content: SCORING_PROMPT },
+                    ...messages.map(m => ({ role: m.role, content: m.content }))
+                ],
+                max_tokens: 10,
+                temperature: 0.1
+            });
+
+            const rawScoreReply = scoreCompletion.choices[0]?.message?.content || "";
+            let scoreMatch = rawScoreReply.match(/\d+/);
+            let score = scoreMatch ? parseInt(scoreMatch[0]) : 50;
+
+            await supabase.from('sessions').update({ score, status: 'awaiting_decision' }).eq('id', session.id);
+            await message.reply(`\n📊 **Tu Score Financiero estimado es: ${score}/100**\n\n¿Te gustaría publicar este resultado en nuestra plataforma Web3 para ofertas? (Responde "Sí" o "No")`);
+        }
+    } catch (e) {
+        console.error("Error en flujo de mensaje:", e);
+    }
+});
+
+client.on('error', (e) => console.error('Discord error:', e.message));
+process.on('unhandledRejection', (e) => console.error('Unhandled:', e.message));
+
+client.login(DISCORD_TOKEN).catch(e => {
+    console.error("❌ Falló inicio de sesión en Discord. Revisa el token en .env");
+});
