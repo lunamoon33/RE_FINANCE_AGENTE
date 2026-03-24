@@ -1,0 +1,73 @@
+{
+  "fetched_at": "2026-03-24T07:38:32.528Z",
+  "sessions": [
+    {
+      "id": "89a97029-5295-436f-be09-b3fe208426c8",
+      "thread_id": "1485901287798345768",
+      "user_id": "11b1e6bc-2931-4be0-8765-cee0d1bdb4d7",
+      "status": "completed",
+      "score": 82,
+      "publish_decision": false,
+      "testnet_url": null,
+      "created_at": "2026-03-24T07:21:13.977662+00:00"
+    }
+  ],
+  "conversations": {
+    "89a97029-5295-436f-be09-b3fe208426c8": [
+      {
+        "id": "150b9b8e-c449-4062-a05f-8f30d0a6879b",
+        "role": "assistant",
+        "content": "¡Hola <@746861293654376558>! Soy tu agente RE-FINANCE. Vamos a revisar tu perfil financiero para darte las mejores recomendaciones.\n\nPara empezar, ¿cuáles son tus principales fuentes de ingresos actuales?",
+        "created_at": "2026-03-24T07:21:14.614212+00:00"
+      },
+      {
+        "id": "db2fdc9f-d067-4861-a219-6108d148de69",
+        "role": "user",
+        "content": "mi trabajo",
+        "created_at": "2026-03-24T07:21:27.179362+00:00"
+      },
+      {
+        "id": "a692d012-2d08-4d46-9d7e-7b895e345063",
+        "role": "assistant",
+        "content": "¿Cuál es tu nivel de ingresos mensuales aproximado en tu trabajo actual?",
+        "created_at": "2026-03-24T07:21:28.246812+00:00"
+      },
+      {
+        "id": "8c1a22a1-0f9b-4eea-af69-dda9c1b3be6a",
+        "role": "user",
+        "content": "unos 4000 soles",
+        "created_at": "2026-03-24T07:21:43.440406+00:00"
+      },
+      {
+        "id": "fbd40440-ea75-4fdd-bc71-1f41e79dce69",
+        "role": "assistant",
+        "content": "Con un ingreso mensual de 4000 soles, es importante saber cómo gestionas tus deudas. ¿Tienes alguna deuda pendiente, como préstamos personales, tarjetas de crédito o hipotecas, y si es así, cuál es el monto total aproximado de esas deudas?",
+        "created_at": "2026-03-24T07:21:44.357103+00:00"
+      },
+      {
+        "id": "ce31c8ed-fc4b-4856-8975-e4a9c2a0573c",
+        "role": "user",
+        "content": "un par de tarjetas de credito pero siempre pago a tiempo",
+        "created_at": "2026-03-24T07:22:06.815917+00:00"
+      },
+      {
+        "id": "4ab8b5d4-42cd-4564-a18d-dc710a45763f",
+        "role": "assistant",
+        "content": "Pagar a tiempo es excelente para mantener un buen historial crediticio. Por último, ¿tienes algún plan o meta financiera a corto o largo plazo, como ahorrar para una compra importante, invertir o pagar deudas?\n\n(Después de esta pregunta, finalizaré la entrevista)",
+        "created_at": "2026-03-24T07:22:07.796074+00:00"
+      },
+      {
+        "id": "6178d831-a855-4458-a474-15e81b65f7f8",
+        "role": "user",
+        "content": "en corto un viaje a argentina en unos meses y en largo una maestria en canada",
+        "created_at": "2026-03-24T07:22:42.569801+00:00"
+      },
+      {
+        "id": "93d1cf69-6e43-445b-96c5-2e7d11993830",
+        "role": "assistant",
+        "content": "Excelente, tener metas claras es fundamental para planificar tus finanzas. Ahora que hemos revisado tu perfil financiero, puedo ofrecerte recomendaciones personalizadas para alcanzar tus objetivos.",
+        "created_at": "2026-03-24T07:22:43.429846+00:00"
+      }
+    ]
+  }
+}
