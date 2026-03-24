@@ -1,3 +1,10 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 import { Client, GatewayIntentBits, REST, Routes, Events } from 'discord.js';
 import Groq from 'groq-sdk';
 import { supabase } from './db.mjs';
@@ -17,8 +24,10 @@ try {
 
 const SYSTEM_PROMPT = `Eres un asesor financiero experto de RE-FINANCE.
 Tu objetivo es realizar una breve entrevista de unas 3 a 4 preguntas para evaluar la salud crediticia/financiera del usuario.
-Haz una pregunta a la vez. Sé amable y conciso. 
-Cuando consideres que tienes suficiente información (aprox 3 interacciones), despídete brevemente y escribe SIEMPRE exactamente la palabra "ENTREVISTA_FINALIZADA" al final de tu último mensaje. Esto es crítico.`;
+Reglas Críticas:
+1. BLOQUEO TEMÁTICO: No respondas ni fomentes temas que no sean estrictamente de finanzas, crédito o emprendimiento. Si el usuario se desvía, córtalo amablemente y vuélvelo a la entrevista.
+2. Haz una pregunta a la vez. Sé amable, pero extremadamente conciso.
+3. Al terminar la entrevista, despídete brevemente y escribe SIEMPRE exactamente la palabra "ENTREVISTA_FINALIZADA" al final de tu último mensaje.`;
 
 const SCORING_PROMPT = `Basado en la siguiente conversación financiera, calcula un score financiero del 1 al 100 del usuario. Devuelve SOLO un número entero, nada de texto adicional.`;
 
@@ -184,8 +193,17 @@ client.on(Events.MessageCreate, async message => {
             let scoreMatch = rawScoreReply.match(/\d+/);
             let score = scoreMatch ? parseInt(scoreMatch[0]) : 50;
 
+            let categoryText = '';
+            if (score >= 70) {
+                categoryText = "**Categoría A (Excelente)**: Calificas para conexión directa con protocolos como Moola, Aave o Credit Collective.";
+            } else if (score >= 40) {
+                categoryText = "**Categoría B (Intermedio)**: Tienes buen potencial. Te generaremos 3 recomendaciones financieras personalizadas.";
+            } else {
+                categoryText = "**Categoría C (Mejorable)**: Te brindaremos un plan de mejora financiera estructurado a 30, 60 y 90 días.";
+            }
+
             await supabase.from('sessions').update({ score, status: 'awaiting_decision' }).eq('id', session.id);
-            await message.reply(`\n📊 **Tu Score Financiero estimado es: ${score}/100**\n\n¿Te gustaría publicar este resultado en nuestra plataforma Web3 para ofertas? (Responde "Sí" o "No")`);
+            await message.reply(`\n📊 **Tu Score Financiero estimado es: ${score}/100**\n\n${categoryText}\n\n¿Te gustaría publicar este resultado en nuestra plataforma Web3 para ofertas? (Responde "Sí" o "No")`);
         }
     } catch (e) {
         console.error("Error en flujo de mensaje:", e);

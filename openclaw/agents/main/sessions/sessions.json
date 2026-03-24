@@ -16,7 +16,7 @@
       "accountId": "default"
     },
     "sessionId": "e718f83f-c5f2-4596-ac3a-63ce358f6c5f",
-    "updatedAt": 1773807791068,
+    "updatedAt": 1774335561235,
     "deliveryContext": {
       "channel": "discord",
       "to": "channel:978105976710369370",
@@ -116,7 +116,7 @@
     "contextTokens": 400000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773807779249,
+      "generatedAt": 1774335547686,
       "sessionId": "e718f83f-c5f2-4596-ac3a-63ce358f6c5f",
       "sessionKey": "agent:main:discord:channel:978105976710369370",
       "provider": "openai",
@@ -136,8 +136,8 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 30763,
-        "projectContextChars": 18209,
+        "chars": 35042,
+        "projectContextChars": 22488,
         "nonProjectContextChars": 12554
       },
       "injectedWorkspaceFiles": [
@@ -153,8 +153,8 @@
           "name": "SOUL.md",
           "path": "/home/node/.openclaw/workspace/SOUL.md",
           "missing": false,
-          "rawChars": 1311,
-          "injectedChars": 1311,
+          "rawChars": 3965,
+          "injectedChars": 3965,
           "truncated": false
         },
         {
@@ -169,8 +169,8 @@
           "name": "IDENTITY.md",
           "path": "/home/node/.openclaw/workspace/IDENTITY.md",
           "missing": false,
-          "rawChars": 633,
-          "injectedChars": 633,
+          "rawChars": 440,
+          "injectedChars": 440,
           "truncated": false
         },
         {
@@ -185,8 +185,8 @@
           "name": "HEARTBEAT.md",
           "path": "/home/node/.openclaw/workspace/HEARTBEAT.md",
           "missing": false,
-          "rawChars": 1592,
-          "injectedChars": 1592,
+          "rawChars": 3410,
+          "injectedChars": 3410,
           "truncated": false
         },
         {
@@ -336,11 +336,11 @@
         ]
       }
     },
-    "inputTokens": 338,
-    "outputTokens": 531,
-    "cacheRead": 19584,
+    "inputTokens": 522,
+    "outputTokens": 565,
+    "cacheRead": 22528,
     "cacheWrite": 0,
-    "totalTokens": 19922,
+    "totalTokens": 22662,
     "totalTokensFresh": true
   },
   "agent:main:discord:channel:1483304630602694820": {
