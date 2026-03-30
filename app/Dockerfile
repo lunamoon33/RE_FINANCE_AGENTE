@@ -1,6 +1,15 @@
 FROM node:20-alpine
+
+ENV NODE_ENV=production
+
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install
+
+RUN npm install --omit=dev
+
 COPY . .
-CMD ["npm", "start"]
+
+USER node
+EXPOSE 3000
+
+CMD ["node", "index.mjs"]

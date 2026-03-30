@@ -7,7 +7,12 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import { Client, GatewayIntentBits, REST, Routes, Events } from 'discord.js';
 import Groq from 'groq-sdk';
+import { ethers } from 'ethers';
+import express from 'express';
 import { supabase } from './db.mjs';
+
+const app = express();
+app.use(express.json()); // Permitir que reciba JSONs en los endpoints
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -22,7 +27,7 @@ try {
     console.warn("⚠️ Groq client initialization failed, ensure GROQ_API_KEY is correct.");
 }
 
-const SYSTEM_PROMPT = `Eres un asesor financiero experto de RE-FINANCE.
+let SYSTEM_PROMPT = `Eres un asesor financiero experto de RE-FINANCE.
 Tu objetivo es realizar una breve entrevista de unas 3 a 4 preguntas para evaluar la salud crediticia/financiera del usuario.
 Reglas Críticas:
 1. BLOQUEO TEMÁTICO: No respondas ni fomentes temas que no sean estrictamente de finanzas, crédito o emprendimiento. Si el usuario se desvía, córtalo amablemente y vuélvelo a la entrevista.
@@ -119,13 +124,60 @@ client.on(Events.MessageCreate, async message => {
         }
 
         if (session.status === 'awaiting_wallet') {
-            const wallet = message.content.trim();
+            const walletInput = message.content.trim();
+            
+            // Buscar si dentro del texto del usuario hay algo que parezca una dirección de Billetera
+            const addressMatch = walletInput.match(/0x[a-fA-F0-9]{40}/);
+            const wallet = addressMatch ? addressMatch[0] : null;
+
+            if (!wallet || !ethers.isAddress(wallet)) {
+                await message.reply("👀 No detecté una dirección Web3 válida en tu mensaje. Por favor envía tu wallet completa (empezando con `0x`...).");
+                return;
+            }
+
             await supabase.from('users').update({ wallet }).eq('id', session.user_id);
             
-            const testnetUrl = process.env.TESTNET_URL || 'https://testnet.re-finance.com';
-            await supabase.from('sessions').update({ testnet_url: testnetUrl, status: 'completed' }).eq('id', session.id);
-            
-            await message.reply(`✅ Tus resultados han sido mock-publicados para la wallet \`${wallet}\` en el endpoint: ${testnetUrl}\n¡Sesión finalizada exitosamente!`);
+            await message.reply("⏳ Enviando transacción a la Rollux Testnet... (esto tomará unos segundos)");
+
+            try {
+                // Limpiar posibles comillas atrapadas en el .env
+                const rpcUrl = process.env.ROLLUX_RPC_URL || 'https://rpc.tanenbaum.io';
+                const adminPk = (process.env.ADMIN_PRIVATE_KEY || '').replace(/['"]/g, '').trim();
+                const contractAddress = (process.env.CONTRACT_ADDRESS || '').replace(/['"]/g, '').trim();
+
+                // Configurar Ethers Provider & Signer
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+                const adminWallet = new ethers.Wallet(adminPk, provider);
+
+                // IMPORTANTE: Este ABI es un ejemplo. Si tienes un contrato real, debes cambiar esto.
+                const abi = ["function publishScore(address userWallet, uint8 score) public"];
+                const contract = new ethers.Contract(contractAddress, abi, adminWallet);
+
+                await message.reply("⏳ `[Diagnóstico 1/3]` Obteniendo conexión y preparando la firma de la transacción...");
+
+                // Ejecutando la transacción en la cadena (Agregando gas manual ESTÚPIDAMENTE ALTO para saltarse los bloqueos y forzar a los mineros a priorizarla)
+                const tx = await contract.publishScore(wallet, session.score, { 
+                    gasLimit: 600000,
+                    gasPrice: ethers.parseUnits('100', 'gwei')
+                });
+
+                await message.reply(`⏳ \`[Diagnóstico 2/3]\` ¡Transacción empujada a la red exitosamente! (Hash: \`${tx.hash}\`). Esperando que los mineros la confirmen...`);
+
+                await tx.wait(1); // Esperar a que se mine la transacción
+
+                // EXPLORADOR ACTUAL (Tanenbaum NEVM L1)
+                const txUrl = `https://explorer.tanenbaum.io/tx/${tx.hash}`;
+                
+                // MIGRACIÓN: Cuando te pases a zkTanenbaum, borra la línea de arriba y descomenta esta:
+                // const txUrl = \`https://explorer-zk.tanenbaum.io/tx/\${tx.hash}\`;
+                await supabase.from('sessions').update({ testnet_url: txUrl, status: 'completed' }).eq('id', session.id);
+                
+                await message.reply(`✅ Tus resultados han sido **publicados oficialmente** en la Blockchain (Rollux Testnet)\n🌍 Hash: ${txUrl}\n🎉 ¡Sesión finalizada exitosamente!`);
+            } catch (error) {
+                console.error("Error al publicar en blockchain:", error);
+                await message.reply(`❌ Hubo un error al intentar publicar en la blockchain. Por favor revisa que tengas un Contrato de pruebas listo y tu Clave Privada configurada.`);
+                // No actualizamos status = 'completed' para que el usuario pueda reintentar si lo desea
+            }
             return;
         }
 
@@ -215,4 +267,30 @@ process.on('unhandledRejection', (e) => console.error('Unhandled:', e.message));
 
 client.login(DISCORD_TOKEN).catch(e => {
     console.error("❌ Falló inicio de sesión en Discord. Revisa el token en .env");
+});
+
+// --- EXPRESS API (Rutas de Administración) ---
+app.get('/api/system-prompt', (req, res) => {
+    return res.json({ currentPrompt: SYSTEM_PROMPT });
+});
+
+app.post('/api/system-prompt', (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) {
+        return res.status(400).json({ error: "Falta el campo 'prompt' en el cuerpo de tu JSON." });
+    }
+    
+    SYSTEM_PROMPT = prompt; // Re-escribir el Prompt en Memoria RAM
+    console.log(`🤖 [API] El Prompt de Sistema del Bot ha sido actualizado manualmente.`);
+    
+    return res.json({ 
+        success: true, 
+        message: "¡Prompt actualizado correctamente en vivo!", 
+        currentPrompt: SYSTEM_PROMPT 
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🌍 API REST administrativa corriendo en el portal: http://localhost:${PORT}`);
 });
