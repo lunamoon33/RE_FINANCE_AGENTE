@@ -100,12 +100,35 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot) return;
 
-    // Responder si el bot es mencionado
-    if (message.mentions.has(client.user)) {
-        return message.reply(`¡Hola! Soy tu agente RE-FINANCE. 📊\nPor favor, usa el comando \`/refinance\` para empezar una sesión financiera conmigo.`);
-    }
+    // Si es un mensaje normal (fuera de thread) pero mencionan al bot
+    if (!message.channel.isThread()) {
+        if (message.mentions.has(client.user)) {
+            await message.channel.sendTyping();
+            try {
+                const prompt = `Eres el asistente de RE-FINANCE en Discord. El usuario te mencionó en un canal general. 
+Responde de forma natural, amigable y conversacional a lo que te diga, pero tu principal objetivo en CADA mensaje que envíes es PERSUADIR al usuario para que escriba y use el comando "/refinance".
+Ese comando sirve para iniciar una evaluación de salud crediticia privada e interactiva.
+NUNCA inicies una evaluación financiera aquí. Solo resuelve su duda e invítalo a usar el comando.`;
 
-    if (!message.channel.isThread()) return;
+                const completion = await groq.chat.completions.create({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: prompt },
+                        { role: 'user', content: message.content }
+                    ],
+                    max_tokens: 400,
+                    temperature: 0.7
+                });
+                
+                const reply = completion.choices[0]?.message?.content || "¡Hola! ¿En qué te ayudo? Recuerda usar `/refinance` para empezar una sesión financiera.";
+                return message.reply(reply);
+            } catch (err) {
+                console.error("Error respondiendo a mención:", err);
+                return message.reply("¡Hola! Recuerda que puedes usar el comando `/refinance` para iniciar una evaluación financiera conmigo.");
+            }
+        }
+        return; // Si no es thread y no lo mencionaron, no hace nada extra
+    }
 
     try {
         // Verificar existencia de sesión activa para este thread
