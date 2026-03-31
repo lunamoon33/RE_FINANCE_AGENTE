@@ -57,10 +57,7 @@ client.once(Events.ClientReady, async (c) => {
 client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === 'refinance') {
-        // Validación de canal
-        if (BOT_CHANNEL_ID && interaction.channelId !== BOT_CHANNEL_ID && BOT_CHANNEL_ID !== 'insert_channel_here') {
-            return interaction.reply({ content: `Por favor usa este comando en el canal designado para el bot.`, ephemeral: true });
-        }
+        // Validación de canal eliminada para permitir cualquier canal
         
         await interaction.reply({ content: 'Iniciando sesión en la base de datos...', ephemeral: true });
 
@@ -102,6 +99,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot) return;
+
+    // Responder si el bot es mencionado
+    if (message.mentions.has(client.user)) {
+        return message.reply(`¡Hola! Soy tu agente RE-FINANCE. 📊\nPor favor, usa el comando \`/refinance\` para empezar una sesión financiera conmigo.`);
+    }
+
     if (!message.channel.isThread()) return;
 
     try {
